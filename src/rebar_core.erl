@@ -208,8 +208,12 @@ process_dir1(Dir, Command, DirSet, Config, CurrentCodePath,
     AllPredirs = Predirs ++ PluginPredirs,
 
     ?DEBUG("Predirs: ~p\n", [AllPredirs]),
-    {Config3, DirSet2} = process_each(AllPredirs, Command, Config2,
-                                      ModuleSetFile, DirSet),
+    %% Mark the current directory as processed 
+    %% (doing this here prevents loops when deps are circular)
+    DirSet2 = sets:add_element(Dir, DirSet),
+
+    {Config3, DirSet3} = process_each(AllPredirs, Command, Config2,
+                                      ModuleSetFile, DirSet2),
 
     %% Make sure the CWD is reset properly; processing the dirs may have
     %% caused it to change
@@ -240,8 +244,6 @@ process_dir1(Dir, Command, DirSet, Config, CurrentCodePath,
                                    Config6, ModuleSetFile, Env)
               end,
 
-    %% Mark the current directory as processed
-    DirSet3 = sets:add_element(Dir, DirSet2),
 
     %% Invoke 'postprocess' on the modules. This yields a list of other
     %% directories that should be processed _after_ the current one.
